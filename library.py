@@ -51,6 +51,37 @@ class CustomMappingTransformer(BaseEstimator, TransformerMixin):
     result = self.transform(X)
     return result
 
+class CustomRenamingTransformer(BaseEstimator, TransformerMixin):
+  #your __init__ method below
+  def __init__(self, renaming_dict:dict):
+    assert isinstance(renaming_dict, dict), f'{self.__class__.__name__} constructor expected dictionary but got {type(renaming_dict)} instead.'
+    self.renaming_dict = renaming_dict
+
+  #define fit to do nothing but give warning
+  def fit(self, X, y = None):
+    print(f"\nWarning: {self.__class__.__name__}.fit does nothing.\n")
+    return self
+
+  #write the transform method with asserts. Again, maybe copy and paste from MappingTransformer and fix up.
+  def transform(self, X):
+    assert isinstance(X, pd.core.frame.DataFrame), f'{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead.'
+
+    missing_cols = set(self.renaming_dict.keys()) - set(X.columns)
+    if missing_cols:
+      missing_cols_str = ', '.join(missing_cols)
+      raise AssertionError(f"{self.__class__.__name__}.transform: Columns not found in DataFrame: {missing_cols_str}")
+
+    #do actual transforming
+    X_ = X.copy()
+    X_.rename(columns=self.renaming_dict, inplace=True)
+    return X_
+
+  #write fit_transform that skips fit
+  def fit_transform(self, X, y = None):
+    #self.fit(X,y)
+    result = self.transform(X)
+    return result
+
 class CustomOHETransformer(BaseEstimator, TransformerMixin):
   
   def __init__(self, target_column, dummy_na=False, drop_first=False):
