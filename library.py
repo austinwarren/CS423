@@ -111,3 +111,91 @@ class CustomOHETransformer(BaseEstimator, TransformerMixin):
     #self.fit(X,y)
     result = self.transform(X)
     return result
+
+class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
+  def __init__(self, target_column, fence='outer'):
+    self.is_fit = False
+    self.target_column = target_column
+    self.fence = fence
+    self.low = None
+    self.high = None
+    assert fence in ['inner', 'outer']
+
+  def fit(self, X, y=None):
+
+    self.is_fit = True
+    assert isinstance(X, pd.core.frame.DataFrame), f'expected Dataframe but got {type(X)} instead.'
+    assert self.target_column in X.columns, f'unknown column {self.target_column}'
+    assert all([isinstance(v, (int, float)) for v in X[self.target_column].to_list()])
+
+    #your code below
+    q1 = X[self.target_column].quantile(0.25)
+    q3 = X[self.target_column].quantile(0.75)
+
+    if (self.fence == 'outer'):
+    
+      IQR = q3-q1 
+      outer_low = q1-3*IQR
+      outer_high = q3+3*IQR
+
+      self.low, self.high = outer_low, outer_high
+    else:
+      IQR = q3-q1
+      inner_low = q1-1.5*IQR
+      inner_high = q3+1.5*IQR
+
+      self.low, self.high = inner_low, inner_high
+
+    return self.low, self.high
+
+  def transform(self, X):
+    assert (self.is_fit), f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
+    assert isinstance(X, pd.core.frame.DataFrame), f"{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead."
+
+    X_ = X.copy()
+    X_[self.target_column] = X_[self.target_column].clip(lower=self.low, upper=self.high)
+    X_ = X_.reset_index(drop=True)
+    return X_
+
+  def fit_transform(self, X, y=None):
+    self.fit(X, y)
+    result = self.transform(X)
+    return result
+
+class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
+  def __init__(self, target_column):
+    self.is_fit = False
+    self.target_column = target_column
+    self.low_bound = None
+    self.high_bound = None
+
+  def fit(self, X, y=None):
+
+    assert isinstance(X, pd.core.frame.DataFrame), f'expected Dataframe but got {type(X)} instead.'
+    assert self.target_column in X.columns, f'unknown column {self.target_column}'
+    assert all([isinstance(v, (int, float)) for v in X[self.target_column].to_list()])
+    self.is_fit = True
+
+    #your code below
+    mean = X[self.target_column].mean() # average
+    std_dev = X[self.target_column].std() # standard deviation
+
+    self.low_boundary = mean - 3 * std_dev
+    self.high_boundary = mean + 3 * std_dev
+
+    return self.low_boundary, self.high_boundary
+
+  def transform(self, X):
+
+    assert (self.is_fit), f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
+    assert isinstance(X, pd.core.frame.DataFrame), f"{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead."
+
+    X_ = X.copy()
+    X_[self.target_column] = X_[self.target_column].clip(lower=self.low_boundary, upper=self.high_boundary)
+    X_ = X_.reset_index(drop=True)
+    return X_
+
+  def fit_transform(self, X, y=None):
+    self.fit(X, y)
+    result = self.transform(X)
+    return result
