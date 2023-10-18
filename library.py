@@ -199,3 +199,27 @@ class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
     self.fit(X, y)
     result = self.transform(X)
     return result
+
+class CustomRobustTransformer(BaseEstimator, TransformerMixin):
+  def __init__(self, column):
+    #fill in rest below
+    self.column = column
+    self.median = None
+    self.iqr = None
+
+  def fit(self, X, y=None):
+    # Calculate the median and IQR for the specified column
+    self.iqr = X[self.column].quantile(.75) - X[self.column].quantile(.25)
+    self.median = X[self.column].median()
+    return self
+
+  def transform(self, X):
+    # Apply the Robust Scaling transformation using the computed median and IQR
+    X_copy = X.copy()
+    X_copy[self.column] = (X_copy[self.column] - self.median) / self.iqr
+    return X_copy
+
+  def fit_transform(self, X, y=None):
+    self.fit(X, y)
+    result = self.transform(X)
+    return result
