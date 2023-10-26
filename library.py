@@ -14,13 +14,6 @@ import category_encoders as ce
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import f1_score
 
-titanic_variance_based_split = 107
-customer_variance_based_split = 113
-
-#fitted_pipeline = titanic_transformer.fit(X_train, y_train)  #notice just fit method called
-#import joblib
-#joblib.dump(fitted_pipeline, 'fitted_pipeline.pkl')
-
 class CustomMappingTransformer(BaseEstimator, TransformerMixin):
 
   def __init__(self, mapping_column, mapping_dict:dict):
@@ -259,6 +252,9 @@ def find_random_state(features_df, labels, n=200):
     idx = np.argmin(np.abs(np.array(f1_ratios) - avg_ratio))  # Find the index of the smallest absolute difference
 
     return idx
+
+titanic_variance_based_split = 107
+customer_variance_based_split = 113
 
 titanic_transformer = Pipeline(steps=[
     ('map_gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
