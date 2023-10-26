@@ -5,6 +5,7 @@ sklearn.set_config(transform_output="pandas")  #says pass pandas tables through 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.impute import KNNImputer
+from sklearn.model_selection import train_test_split
 
 import subprocess
 import sys
@@ -239,6 +240,26 @@ class CustomRobustTransformer(BaseEstimator, TransformerMixin):
     result = self.transform(X)
     return result
 
+def find_random_state(features_df, labels, n=200):
+    model = KNeighborsClassifier(n_neighbors=5)  # Instantiate with k=5.
+    f1_ratios = []  # Collect test_error/train_error where error is based on F1 score
+
+    for i in range(1, 200):
+        train_X, test_X, train_y, test_y = train_test_split(features_df, labels, test_size=0.2, shuffle=True,
+                                                      random_state=i, stratify=labels)
+        model.fit(train_X, train_y)  # Train the model
+        train_pred = model.predict(train_X)  # Predict against the training set
+        test_pred = model.predict(test_X)  # Predict against the test set
+        train_f1 = f1_score(train_y, train_pred)  # F1 score on training predictions
+        test_f1 = f1_score(test_y, test_pred)  # F1 score on test predictions
+        f1_ratio = test_f1 / train_f1  # Calculate the ratio
+        f1_ratios.append(f1_ratio)
+
+    avg_ratio = np.mean(f1_ratios)  # Calculate the average ratio value
+    idx = np.argmin(np.abs(np.array(f1_ratios) - avg_ratio))  # Find the index of the smallest absolute difference
+
+    return idx
+
 titanic_transformer = Pipeline(steps=[
     ('map_gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('map_class', CustomMappingTransformer('Class', {'Crew': 0, 'C3': 1, 'C2': 2, 'C1': 3})),
@@ -267,23 +288,3 @@ customer_transformer = Pipeline(steps=[
     ('scale_time spent', CustomRobustTransformer('Time Spent')), #from 5
     ('impute', KNNImputer(n_neighbors=5, weights="uniform", add_indicator=False)),
     ], verbose=True)
-
-def find_random_state(features_df, labels, n=200):
-    model = KNeighborsClassifier(n_neighbors=5)  # Instantiate with k=5.
-    f1_ratios = []  # Collect test_error/train_error where error is based on F1 score
-
-    for i in range(1, 200):
-        train_X, test_X, train_y, test_y = train_test_split(features_df, labels, test_size=0.2, shuffle=True,
-                                                      random_state=i, stratify=labels)
-        model.fit(train_X, train_y)  # Train the model
-        train_pred = model.predict(train_X)  # Predict against the training set
-        test_pred = model.predict(test_X)  # Predict against the test set
-        train_f1 = f1_score(train_y, train_pred)  # F1 score on training predictions
-        test_f1 = f1_score(test_y, test_pred)  # F1 score on test predictions
-        f1_ratio = test_f1 / train_f1  # Calculate the ratio
-        f1_ratios.append(f1_ratio)
-
-    avg_ratio = np.mean(f1_ratios)  # Calculate the average ratio value
-    idx = np.argmin(np.abs(np.array(f1_ratios) - avg_ratio))  # Find the index of the smallest absolute difference
-
-    return idx
