@@ -17,9 +17,9 @@ from sklearn.metrics import f1_score
 titanic_variance_based_split = 107
 customer_variance_based_split = 113
 
-fitted_pipeline = titanic_transformer.fit(X_train, y_train)  #notice just fit method called
-import joblib
-joblib.dump(fitted_pipeline, 'fitted_pipeline.pkl')
+#fitted_pipeline = titanic_transformer.fit(X_train, y_train)  #notice just fit method called
+#import joblib
+#joblib.dump(fitted_pipeline, 'fitted_pipeline.pkl')
 
 class CustomMappingTransformer(BaseEstimator, TransformerMixin):
 
