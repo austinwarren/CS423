@@ -1,0 +1,2 @@
+from joblib import dump
+dump(best_model_ch1, 'xgb_model.joblib')
