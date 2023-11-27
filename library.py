@@ -14,6 +14,9 @@ import subprocess
 subprocess.call([sys.executable, '-m', 'pip', 'install', 'category_encoders'])  #replaces !pip install
 import category_encoders as ce
 
+from sklearn.experimental import enable_halving_search_cv
+from sklearn.model_selection import HalvingGridSearchCV
+
 class CustomMappingTransformer(BaseEstimator, TransformerMixin):
 
   def __init__(self, mapping_column, mapping_dict:dict):
